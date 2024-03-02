@@ -1,6 +1,7 @@
 import React, { memo } from "react";
 import { Link } from "../styles/StyledComponents";
-import { Box, Stack, Typography } from "@mui/material";
+import { Avatar, Box, Stack, Typography } from "@mui/material";
+import AvatarCard from "./AvatarCard";
 
 const ChatItem = ({
   index = 0,
@@ -32,7 +33,8 @@ const ChatItem = ({
           color: sameSender ? "white" : "unset",
         }}
       >
-        {/* Avatar Card */}
+        <AvatarCard avatar={avatar} />
+
         <Stack>
           <Typography>{name}</Typography>
           {newMessageAlert && (
