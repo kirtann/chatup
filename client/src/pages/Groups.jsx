@@ -1,29 +1,51 @@
 import {
+  Add as AddIcon,
+  Delete as DeleteIcon,
+  Done as DoneIcon,
+  Edit as EditIcon,
   KeyboardBackspace as KeyboardBackspaceIcon,
   Menu as MenuIcon,
 } from "@mui/icons-material";
 import {
+  Backdrop,
   Box,
+  Button,
   Drawer,
   Grid,
   IconButton,
   Stack,
+  TextField,
   Tooltip,
   Typography,
 } from "@mui/material";
-import React, { memo, useState } from "react";
+import React, { Suspense, lazy, memo, useEffect, useState } from "react";
 import { matBlack } from "../constants/color";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { Link } from "../components/styles/StyledComponents";
 import AvatarCard from "../components/shared/AvatarCard";
+
 import { sampleChats } from "../constants/sampleData";
 
-const Groups = () => {
-  const chatId = "sldaj";
+const ConfirmDeleteDialog = lazy(() =>
+  import("../components/dialogs/ConfirmDeleteDialog")
+);
 
+const AddMemberDialog = lazy(() =>
+  import("../components/dialogs/AddMemberDialog")
+);
+
+const isAddMember = true;
+
+const Groups = () => {
+  const chatId = useSearchParams()[0].get("group");
   const navigate = useNavigate();
 
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isEdit, setIsEdit] = useState(false);
+  const [confirmDeleteDialog, setConfirmDeleteDialog] = useState(false);
+
+  const [groupName, setGroupName] = useState("");
+  const [groupNameUpdatedvalue, setGroupNameUpdatedValue] = useState("");
 
   const navigateBack = () => {
     navigate("/");
@@ -34,6 +56,41 @@ const Groups = () => {
   };
 
   const handleMobileClose = () => setIsMobileMenuOpen(false);
+
+  const updateGroupName = () => {
+    setIsEdit(false);
+    console.log(groupNameUpdatedvalue);
+  };
+
+  const openConfirmDeleteHandler = () => {
+    setConfirmDeleteDialog(true);
+    console.log("delete group");
+  };
+
+  const closeConfirmDeleteHandler = () => {
+    setConfirmDeleteDialog(false);
+    console.log("delete group");
+  };
+
+  const openAddMemberHandler = () => {
+    console.log("add member");
+  };
+
+  const deleteHandler = () => {
+    console.log("delete handler");
+    closeConfirmDeleteHandler();
+  };
+
+  useEffect(() => {
+    setGroupName(`Group Name ${chatId}`);
+    setGroupNameUpdatedValue(`Group Name ${chatId}`);
+
+    return () => {
+      setGroupName("");
+      setGroupNameUpdatedValue("");
+      setIsEdit(false);
+    };
+  }, [chatId]);
 
   const IconBtns = (
     <>
@@ -73,6 +130,72 @@ const Groups = () => {
     </>
   );
 
+  const GroupName = (
+    <Stack
+      direction={"row"}
+      alignItems={"center"}
+      justifyContent={"cdnter"}
+      spacing={"1rem"}
+      padding={"3rem"}
+    >
+      {isEdit ? (
+        <>
+          <TextField
+            value={groupNameUpdatedvalue}
+            onChange={(e) => setGroupNameUpdatedValue(e.target.value)}
+          />
+          <IconButton
+            onClick={() => {
+              updateGroupName();
+            }}
+          >
+            <DoneIcon />
+          </IconButton>
+        </>
+      ) : (
+        <>
+          <Typography variant="h4">{groupName}</Typography>
+          <IconButton onClick={() => setIsEdit(true)}>
+            <EditIcon />
+          </IconButton>
+        </>
+      )}
+    </Stack>
+  );
+
+  const ButtonGroup = (
+    <Stack
+      direction={{
+        xs: "column-reverse",
+        sm: "row",
+      }}
+      spacing={"1rem"}
+      p={{
+        xs: "0",
+        sm: "1rem",
+        md: "1rem 4rem",
+      }}
+    >
+      <Button
+        size="large"
+        variant="outlined"
+        color="error"
+        startIcon={<DeleteIcon />}
+        onClick={openConfirmDeleteHandler}
+      >
+        Delete Group
+      </Button>
+      <Button
+        size="large"
+        variant="contained"
+        startIcon={<AddIcon />}
+        onClick={openAddMemberHandler}
+      >
+        Add Member
+      </Button>
+    </Stack>
+  );
+
   return (
     <Grid container height={"100vh"}>
       <Grid
@@ -86,7 +209,7 @@ const Groups = () => {
         sm={4}
         bgcolor={"bisque"}
       >
-        <GroupsList myGroups={sampleChats} />
+        <GroupsList myGroups={sampleChats} chatId={chatId} />
       </Grid>
       <Grid
         item
@@ -101,7 +224,56 @@ const Groups = () => {
         }}
       >
         {IconBtns}
+
+        {groupName && (
+          <>
+            {GroupName}
+            <Typography
+              margin={"2rem"}
+              alignSelf={"flex-start"}
+              variant="body1"
+            >
+              Members
+            </Typography>
+
+            <Stack
+              maxWidth={"45rem"}
+              width={"100%"}
+              boxSizing={"border-box"}
+              padding={{
+                sm: "1rem",
+                xs: "0",
+                md: "1rem 4rem",
+              }}
+              spacing={"2rem"}
+              bgcolor={"bisque"}
+              height={"50vh"}
+              overflow={"auto"}
+            >
+              {/* Members */}
+            </Stack>
+
+            {ButtonGroup}
+          </>
+        )}
       </Grid>
+
+      {isAddMember && (
+        <Suspense fallback={<Backdrop open />}>
+          <AddMemberDialog />
+        </Suspense>
+      )}
+
+      {confirmDeleteDialog && (
+        <Suspense fallback={<Backdrop open />}>
+          <ConfirmDeleteDialog
+            open={confirmDeleteDialog}
+            handleClose={closeConfirmDeleteHandler}
+            deleteHandler={deleteHandler}
+          />
+        </Suspense>
+      )}
+
       <Drawer
         sx={{
           display: {
@@ -112,7 +284,7 @@ const Groups = () => {
         open={isMobileMenuOpen}
         onClose={handleMobileClose}
       >
-        <GroupsList w={"50vw"} myGroups={sampleChats} />
+        <GroupsList w={"50vw"} myGroups={sampleChats} chatId={chatId} />
       </Drawer>
     </Grid>
   );
@@ -139,7 +311,9 @@ const GroupListItem = memo(({ group, chatId }) => {
     <Link
       to={`?group=${_id}`}
       onClick={(e) => {
-        if (chatId === _id) e.preventDefault();
+        if (chatId === _id) {
+          e.preventDefault();
+        }
       }}
     >
       <Stack direction={"row"} spacing={"1rem"} alignItems={"center"}>
