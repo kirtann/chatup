@@ -13,6 +13,7 @@ import { useFileHandler, useInputValidation, useStrongPassword } from "6pp";
 import { CameraAlt as CameraAltIcon } from "@mui/icons-material";
 import { VisuallyHiddenInput } from "../components/styles/StyledComponents";
 import { usernameValidator } from "../utils/validators";
+import { bgGradient } from "../constants/color";
 
 const Login = () => {
   const [isLogin, setIsLogin] = useState(true);
@@ -38,7 +39,7 @@ const Login = () => {
   return (
     <div
       style={{
-        backgroundImage: "linear-gradient(120deg, #fdfbfb 0%, #ebedee 100%)",
+        backgroundImage: { bgGradient },
       }}
     >
       <Container
