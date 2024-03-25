@@ -1,8 +1,14 @@
-import { ALERT, REFETCH_CHATS } from "../constants/events.js";
+import {
+  ALERT,
+  NEW_ATTACHMENT,
+  NEW_MESSAGE_ALERT,
+  REFETCH_CHATS,
+} from "../constants/events.js";
 import { getOtherMember } from "../lib/helper.js";
 import { tryCatch } from "../middlewares/error.js";
 import { Chat } from "../models/chatModel.js";
 import { User } from "../models/userModel.js";
+import { Message } from "../models/messageModel.js";
 import { emitEvent } from "../utils/features.js";
 import { ErrorHandler } from "../utils/utility.js";
 
@@ -214,6 +220,54 @@ const leaveGroup = tryCatch(async (req, res, next) => {
   });
 });
 
+const sendAttachments = tryCatch(async (req, res, next) => {
+  const { chatId } = req.body;
+
+  const [chat, me] = await Promise.all([
+    Chat.findById(chatId),
+    User.findById(req.userId, "name"),
+  ]);
+
+  const files = req.files || [];
+
+  if (!chat) return next(new ErrorHandler("Chat not found", 404));
+
+  if (files.length < 1)
+    return next(new ErrorHandler("Please provide files", 400));
+
+  // Upload files here
+  const attachments = [];
+
+  const messageForDb = {
+    content: "",
+    attachments,
+    sender: me._id,
+    chat: chatId,
+  };
+
+  const messageForRealTime = {
+    ...messageForDb,
+    sender: {
+      _id: me._id,
+      name: me.name,
+    },
+  };
+
+  const message = await Message.create(messageForDb);
+
+  emitEvent(req, NEW_ATTACHMENT, chat.members, {
+    message: messageForRealTime,
+    chatId,
+  });
+
+  emitEvent(req, NEW_MESSAGE_ALERT, chat.members, { chatId });
+
+  return res.status(200).json({
+    success: true,
+    message,
+  });
+});
+
 export {
   newGroupChat,
   getMyChats,
@@ -221,4 +275,5 @@ export {
   addMembers,
   removeMember,
   leaveGroup,
+  sendAttachments,
 };
