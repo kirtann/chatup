@@ -25,7 +25,7 @@ app.put("/addmembers", addMembers);
 
 app.put("/removemember", removeMember);
 
-app.delete("leave/:id", leaveGroup);
+app.delete("/leave/:id", leaveGroup);
 
 // Send Attachments
 

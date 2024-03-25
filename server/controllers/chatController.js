@@ -154,9 +154,9 @@ const removeMember = tryCatch(async (req, res, next) => {
       new ErrorHandler("Group must have at least three members", 400)
     );
 
-  chat.members = chat.members.filter((member) => {
-    member.toString() !== userId.toString();
-  });
+  chat.members = chat.members.filter(
+    (member) => member.toString() !== userId.toString()
+  );
 
   await chat.save();
 
@@ -175,7 +175,44 @@ const removeMember = tryCatch(async (req, res, next) => {
   });
 });
 
-const leaveGroup = tryCatch(async (req, res, next) => {});
+const leaveGroup = tryCatch(async (req, res, next) => {
+  const chatId = req.params.id;
+
+  const chat = await Chat.findById(chatId);
+
+  if (!chat) return next(new ErrorHandler("Chat not found", 404));
+
+  if (!chat.groupChat)
+    return next(new ErrorHandler("This is not a group chat", 400));
+
+  const remainingMembers = chat.members.filter(
+    (member) => member.toString() !== req.userId.toString()
+  );
+
+  if (remainingMembers.length < 3)
+    return next(new ErrorHandler("Group must have at least three members"));
+
+  if (chat.creator.toString() === req.userId.toString()) {
+    const randomElement = Math.floor(Math.random() * remainingMembers.length);
+
+    const newCreator = remainingMembers[randomElement];
+    chat.creator = newCreator;
+  }
+
+  chat.members = remainingMembers;
+
+  const [user] = await Promise.all([
+    User.findById(req.userId, "name"),
+    chat.save(),
+  ]);
+
+  emitEvent(req, ALERT, chat.members, `User ${user.name} has left the group`);
+
+  return res.status(200).json({
+    success: true,
+    message: "Left the group successfully",
+  });
+});
 
 export {
   newGroupChat,
