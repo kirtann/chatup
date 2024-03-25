@@ -34,4 +34,14 @@ const emitEvent = (req, event, users, data) => {
   console.log("Emmitting event", event);
 };
 
-export { connectDB, sendToken, cookieOptions, emitEvent };
+const deleteFilesFromCloudinary = async (publicIds) => {
+  // Delete files from cloudinary
+};
+
+export {
+  connectDB,
+  sendToken,
+  cookieOptions,
+  emitEvent,
+  deleteFilesFromCloudinary,
+};
