@@ -6,6 +6,7 @@ import { tryCatch } from "../middlewares/error.js";
 import { ErrorHandler } from "../utils/utility.js";
 import { Request } from "../models/requestModel.js";
 import { NEW_REQUEST, REFETCH_CHATS } from "../constants/events.js";
+import { getOtherMember } from "../lib/helper.js";
 
 const newUser = async (req, res) => {
   const { name, username, password, bio } = req.body;
@@ -185,6 +186,43 @@ const getNotifications = tryCatch(async (req, res) => {
   });
 });
 
+const getFriends = tryCatch(async (req, res) => {
+  const chatId = req.query.chatId;
+
+  const chats = await Chat.find({
+    members: req.userId,
+    groupChat: false,
+  }).populate("members", "name avatar");
+
+  const friends = chats.map(({ members }) => {
+    const otherUser = getOtherMember(members, req.userId);
+
+    return {
+      _id: otherUser._id,
+      name: otherUser.name,
+      avatar: otherUser.avatar.url,
+    };
+  });
+
+  if (chatId) {
+    const chat = await Chat.findById(chatId);
+
+    const availableFriends = friends.filter((friend) => {
+      return !chat.members.includes(friend._id);
+    });
+
+    return res.status(200).json({
+      success: true,
+      friends: availableFriends,
+    });
+  } else {
+    return res.status(200).json({
+      success: true,
+      friends,
+    });
+  }
+});
+
 export {
   login,
   newUser,
@@ -194,4 +232,5 @@ export {
   sendRequest,
   acceptRequest,
   getNotifications,
+  getFriends,
 };
