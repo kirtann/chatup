@@ -15,11 +15,6 @@ import { ErrorHandler } from "../utils/utility.js";
 const newGroupChat = tryCatch(async (req, res, next) => {
   const { name, members } = req.body;
 
-  if (members.length < 2)
-    return next(
-      new ErrorHandler("Group chat must have at least 3 members", 400)
-    );
-
   const allMembers = [...members, req.userId];
 
   await Chat.create({
@@ -93,9 +88,6 @@ const getMyGroups = tryCatch(async (req, res, next) => {
 
 const addMembers = tryCatch(async (req, res, next) => {
   const { chatId, members } = req.body;
-
-  if (!members || members.length < 1)
-    return next(new ErrorHandler("Please provide members", 400));
 
   const chat = await Chat.findById(chatId);
 
