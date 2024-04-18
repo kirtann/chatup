@@ -6,6 +6,7 @@ import cookieParser from "cookie-parser";
 
 import userRoute from "./routes/userRoute.js";
 import chatRoute from "./routes/chatRoute.js";
+import adminRoute from "./routes/adminRoute.js";
 
 dotenv.config({
   path: "./.env",
@@ -24,6 +25,7 @@ app.use(cookieParser());
 
 app.use("/user", userRoute);
 app.use("/chat", chatRoute);
+app.use("/admin", adminRoute);
 
 app.get("/", (req, res) => {
   res.send("Hello World");
