@@ -2,6 +2,47 @@ import { tryCatch } from "../middlewares/error.js";
 import { Chat } from "../models/chatModel.js";
 import { Message } from "../models/messageModel.js";
 import { User } from "../models/userModel.js";
+import { ErrorHandler } from "../utils/utility.js";
+import jwt from "jsonwebtoken";
+import { cookieOptions } from "../utils/features.js";
+
+const adminLogin = tryCatch(async (req, res, next) => {
+  const { secretKey } = req.body;
+
+  const adminSecretKey = process.env.ADMIN_SECRET_KEY || "admin1234";
+
+  const isMatched = secretKey === adminSecretKey;
+
+  if (!isMatched) return next(new ErrorHandler("Invalid secret key", 401));
+
+  const token = jwt.sign(secretKey, process.env.JWT_SECRET);
+
+  return res
+    .status(200)
+    .cookie("chatup-admin-token", token, {
+      ...cookieOptions,
+      maxAge: 1000 * 60 * 15,
+    })
+    .json({
+      success: true,
+      message: "Admin Authenticated successfully",
+      token,
+    });
+});
+
+const adminLogout = tryCatch(async (req, res) => {
+  return res
+    .status(200)
+    .clearCookie("chatup-admin-token", "", { ...cookieOptions, maxAge: 0 })
+    .json({ success: true, message: "Admin Logged out successfully" });
+});
+
+const getAdminData = tryCatch(async (req, res, next) => {
+  return res.status(200).json({
+    success: true,
+    message: "Admin true",
+  });
+});
 
 const getAllUsers = tryCatch(async (req, res) => {
   const users = await User.find({});
@@ -142,4 +183,12 @@ const getDashboardStats = tryCatch(async (req, res) => {
   });
 });
 
-export { getAllUsers, getAllChats, getAllMessages, getDashboardStats };
+export {
+  adminLogin,
+  getAllUsers,
+  getAllChats,
+  getAllMessages,
+  getDashboardStats,
+  adminLogout,
+  getAdminData,
+};
