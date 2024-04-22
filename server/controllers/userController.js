@@ -8,8 +8,12 @@ import { Request } from "../models/requestModel.js";
 import { NEW_REQUEST, REFETCH_CHATS } from "../constants/events.js";
 import { getOtherMember } from "../lib/helper.js";
 
-const newUser = async (req, res) => {
+const newUser = tryCatch(async (req, res, next) => {
   const { name, username, password, bio } = req.body;
+
+  const file = req.file;
+
+  if (!file) return next(new ErrorHandler("Please upload avatar", 400));
 
   const avatar = {
     public_id: "sfjs",
@@ -25,7 +29,7 @@ const newUser = async (req, res) => {
   });
 
   sendToken(res, user, 201, "User created");
-};
+});
 
 // Login User
 const login = tryCatch(async (req, res, next) => {
