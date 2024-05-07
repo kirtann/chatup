@@ -1,7 +1,8 @@
 import { ErrorHandler } from "../utils/utility.js";
 import jwt from "jsonwebtoken";
+import { tryCatch } from "./error.js";
 
-const isAuthenticated = (req, res, next) => {
+const isAuthenticated = tryCatch((req, res, next) => {
   const token = req.cookies["auth-token"];
 
   if (!token)
@@ -12,7 +13,7 @@ const isAuthenticated = (req, res, next) => {
   req.userId = decodedData._id;
 
   next();
-};
+});
 
 const adminOnly = (req, res, next) => {
   const token = req.cookies["chatup-admin-token"];
