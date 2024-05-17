@@ -1,4 +1,12 @@
 import {
+  Add as AddIcon,
+  Group as GroupIcon,
+  Logout as LogoutIcon,
+  Menu as MenuIcon,
+  Notifications as NotificationsIcon,
+  Search as SearchIcon,
+} from "@mui/icons-material";
+import {
   AppBar,
   Backdrop,
   Box,
@@ -7,17 +15,14 @@ import {
   Tooltip,
   Typography,
 } from "@mui/material";
-import React, { useState, Suspense, lazy } from "react";
-import { orange } from "../../constants/color";
-import {
-  Add as AddIcon,
-  Menu as MenuIcon,
-  Search as SearchIcon,
-  Group as GroupIcon,
-  Logout as LogoutIcon,
-  Notifications as NotificationsIcon,
-} from "@mui/icons-material";
+import axios from "axios";
+import React, { Suspense, lazy, useState } from "react";
+import toast from "react-hot-toast";
+import { useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
+import { orange } from "../../constants/color";
+import { server } from "../../constants/config";
+import { userNotExists } from "../../redux/reducers/auth";
 
 const SearchDialog = lazy(() => import("../specific/SearchDialog"));
 const NotificationDialog = lazy(() =>
@@ -27,6 +32,8 @@ const NewGroupDialog = lazy(() => import("../specific/NewGroupsDialog"));
 
 const Header = () => {
   const navigate = useNavigate();
+  const dispatch = useDispatch();
+
   const [isMobile, setIsMobile] = useState(false);
   const [isSearch, setIsSearch] = useState(false);
   const [newGroup, setNewGroup] = useState(false);
@@ -47,8 +54,16 @@ const Header = () => {
   const navigateToGroups = () => {
     navigate("/Groups");
   };
-  const logoutHandler = () => {
-    console.log("logout");
+  const logoutHandler = async () => {
+    try {
+      const { data } = await axios.get(`${server}/api/v1/user/logout`, {
+        withCredentials: true,
+      });
+      dispatch(userNotExists());
+      toast.success(data.message);
+    } catch (error) {
+      toast.error(error?.response?.data?.message || "Something went wrong");
+    }
   };
   return (
     <>
