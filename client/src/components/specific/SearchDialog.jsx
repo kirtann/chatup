@@ -9,11 +9,14 @@ import {
   TextField,
 } from "@mui/material";
 import React, { useEffect, useState } from "react";
-import { sampleUsers } from "../../constants/sampleData";
-import UserItem from "../shared/UserItem";
 import { useDispatch, useSelector } from "react-redux";
+import {
+  useLazySearchUserQuery,
+  useSendFriendRequestMutation,
+} from "../../redux/api/api";
 import { setIsSearch } from "../../redux/reducers/misc";
-import { useLazySearchUserQuery } from "../../redux/api/api";
+import UserItem from "../shared/UserItem";
+import { useAsyncMutation } from "../../hooks/hook";
 
 const SearchDialog = () => {
   const search = useInputValidation("");
@@ -21,13 +24,15 @@ const SearchDialog = () => {
   const { isSearch } = useSelector((state) => state.misc);
 
   const [searchUser] = useLazySearchUserQuery();
+  const [sendFriendRequest, isLoadingSendFriendRequest] = useAsyncMutation(
+    useSendFriendRequestMutation
+  );
 
   const dispatch = useDispatch();
 
-  const addFriendHandler = (id) => {
-    console.log(id);
+  const addFriendHandler = async (id) => {
+    await sendFriendRequest("Sending friend request...", { userId: id });
   };
-  let isLoadingSendFriendRequest = false;
 
   const [users, setUsers] = useState([]);
 
