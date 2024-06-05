@@ -8,23 +8,38 @@ import {
 } from "@mui/icons-material";
 import { InputBox } from "../components/styles/StyledComponents";
 import FileMenu from "../components/dialogs/FileMenu";
-import { sampleMessage } from "../constants/sampleData";
 import MessageComponent from "../components/shared/MessageComponent";
 import { getSocket } from "../socket";
 import { NEW_MESSAGE } from "../constants/events";
-import { useChatDetailsQuery } from "../redux/api/api";
+import { useChatDetailsQuery, useGetMessagesQuery } from "../redux/api/api";
 import { useErrors, useSocketEvents } from "../hooks/hook";
+import { useInfiniteScrollTop } from "6pp";
 
 const Chat = ({ chatId, user }) => {
   const containerRef = useRef(null);
+
+  const [message, setMessage] = useState("");
+  const [messages, setsMessages] = useState([]);
+  const [page, setPage] = useState(1);
 
   const socket = getSocket();
 
   const chatDetails = useChatDetailsQuery({ chatId, skip: !chatId });
 
-  const [message, setMessage] = useState("");
+  const oldMessagesChunk = useGetMessagesQuery({ chatId, page });
 
-  const [messages, setsMessages] = useState([]);
+  const { data: oldMessages, setData: setOldMessages } = useInfiniteScrollTop(
+    containerRef,
+    oldMessagesChunk.data?.totalPages,
+    page,
+    setPage,
+    oldMessagesChunk.data?.messages
+  );
+
+  const errors = [
+    { isError: chatDetails.isError, error: chatDetails.error },
+    { isError: oldMessagesChunk.isError, error: oldMessagesChunk.error },
+  ];
 
   const members = chatDetails?.data?.chat?.members;
 
@@ -46,6 +61,10 @@ const Chat = ({ chatId, user }) => {
 
   useSocketEvents(socket, eventHandler);
 
+  useErrors(errors);
+
+  const allMessages = [...oldMessages, ...messages];
+
   return chatDetails.isLoading ? (
     <Skeleton />
   ) : (
@@ -62,7 +81,7 @@ const Chat = ({ chatId, user }) => {
           overflowY: "auto",
         }}
       >
-        {messages.map((i) => (
+        {allMessages.map((i) => (
           <MessageComponent key={i._id} message={i} user={user} />
         ))}
       </Stack>
