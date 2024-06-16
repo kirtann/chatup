@@ -58,7 +58,7 @@ const removeMemberValidator = () => [
 ];
 
 const sendAttachmentsValidator = () => [
-  body("id", "Please Enter Chat ID").notEmpty(),
+  body("chatId", "Please Enter Chat ID").notEmpty(),
 ];
 
 const chatIDValidator = () => [param("id", "Please Enter Chat ID").notEmpty()];

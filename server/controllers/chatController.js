@@ -9,7 +9,11 @@ import { tryCatch } from "../middlewares/error.js";
 import { Chat } from "../models/chatModel.js";
 import { User } from "../models/userModel.js";
 import { Message } from "../models/messageModel.js";
-import { deleteFilesFromCloudinary, emitEvent } from "../utils/features.js";
+import {
+  deleteFilesFromCloudinary,
+  emitEvent,
+  uploadFilesToCloudinary,
+} from "../utils/features.js";
 import { ErrorHandler } from "../utils/utility.js";
 
 const newGroupChat = tryCatch(async (req, res, next) => {
@@ -234,7 +238,7 @@ const sendAttachments = tryCatch(async (req, res, next) => {
     return next(new ErrorHandler("Please provide files", 400));
 
   // Upload files here
-  const attachments = [];
+  const attachments = await uploadFilesToCloudinary(files);
 
   const messageForDb = {
     content: "",
