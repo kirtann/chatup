@@ -8,7 +8,12 @@ import { createServer } from "http";
 import { v4 as uuid } from "uuid";
 import cors from "cors";
 import { v2 as cloudinary } from "cloudinary";
-import { NEW_MESSAGE, NEW_MESSAGE_ALERT } from "./constants/events.js";
+import {
+  NEW_MESSAGE,
+  NEW_MESSAGE_ALERT,
+  START_TYPING,
+  STOP_TYPING,
+} from "./constants/events.js";
 import { getSockets } from "./lib/helper.js";
 import { Message } from "./models/messageModel.js";
 import { corsOptions } from "./constants/config.js";
@@ -100,6 +105,18 @@ io.on("connection", (socket) => {
     } catch (error) {
       console.log(error);
     }
+  });
+
+  socket.on(START_TYPING, async ({ members, chatId }) => {
+    const membersSockets = getSockets(members);
+
+    socket.to(membersSockets).emit(START_TYPING, { chatId });
+  });
+
+  socket.on(STOP_TYPING, async ({ members, chatId }) => {
+    const membersSockets = getSockets(members);
+
+    socket.to(membersSockets).emit(STOP_TYPING, { chatId });
   });
 
   socket.on("disconnect", () => {
