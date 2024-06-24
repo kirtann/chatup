@@ -26,6 +26,13 @@ import AvatarCard from "../components/shared/AvatarCard";
 
 import { sampleChats, sampleUsers } from "../constants/sampleData";
 import UserItem from "../components/shared/UserItem";
+import {
+  useChatDetailsQuery,
+  useMyGroupsQuery,
+  useRenameGroupMutation,
+} from "../redux/api/api";
+import { useAsyncMutation, useErrors } from "../hooks/hook";
+import { LayoutLoader } from "../components/layout/Loaders";
 
 const ConfirmDeleteDialog = lazy(() =>
   import("../components/dialogs/ConfirmDeleteDialog")
@@ -41,12 +48,54 @@ const Groups = () => {
   const chatId = useSearchParams()[0].get("group");
   const navigate = useNavigate();
 
+  const myGroups = useMyGroupsQuery("");
+
+  const groupDetails = useChatDetailsQuery(
+    { chatId, populate: true },
+    { skip: !chatId }
+  );
+
+  const [updateGroup, isLoadingGroupName] = useAsyncMutation(
+    useRenameGroupMutation
+  );
+
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isEdit, setIsEdit] = useState(false);
   const [confirmDeleteDialog, setConfirmDeleteDialog] = useState(false);
 
   const [groupName, setGroupName] = useState("");
   const [groupNameUpdatedvalue, setGroupNameUpdatedValue] = useState("");
+
+  const [members, setMembers] = useState([]);
+
+  const errors = [
+    {
+      isError: myGroups.isError,
+      error: myGroups.error,
+    },
+    {
+      isError: groupDetails.isError,
+      error: groupDetails.error,
+    },
+  ];
+
+  useErrors(errors);
+
+  useEffect(() => {
+    const groupData = groupDetails.data;
+    if (groupData) {
+      setGroupName(groupData.chat.name);
+      setGroupNameUpdatedValue(groupData.chat.name);
+      setMembers(groupData.chat.members);
+    }
+
+    return () => {
+      setGroupName("");
+      setGroupNameUpdatedValue("");
+      setMembers([]);
+      setIsEdit(false);
+    };
+  }, [groupDetails.data]);
 
   const navigateBack = () => {
     navigate("/");
@@ -60,7 +109,10 @@ const Groups = () => {
 
   const updateGroupName = () => {
     setIsEdit(false);
-    console.log(groupNameUpdatedvalue);
+    updateGroup("Updating Group Name...", {
+      chatId,
+      name: groupNameUpdatedvalue,
+    });
   };
 
   const openConfirmDeleteHandler = () => {
@@ -155,6 +207,7 @@ const Groups = () => {
             onClick={() => {
               updateGroupName();
             }}
+            disabled={isLoadingGroupName}
           >
             <DoneIcon />
           </IconButton>
@@ -162,7 +215,10 @@ const Groups = () => {
       ) : (
         <>
           <Typography variant="h4">{groupName}</Typography>
-          <IconButton onClick={() => setIsEdit(true)}>
+          <IconButton
+            onClick={() => setIsEdit(true)}
+            disabled={isLoadingGroupName}
+          >
             <EditIcon />
           </IconButton>
         </>
@@ -203,7 +259,9 @@ const Groups = () => {
     </Stack>
   );
 
-  return (
+  return myGroups.isLoading ? (
+    <LayoutLoader />
+  ) : (
     <Grid container height={"100vh"}>
       <Grid
         item
@@ -215,7 +273,7 @@ const Groups = () => {
         }}
         sm={4}
       >
-        <GroupsList myGroups={sampleChats} chatId={chatId} />
+        <GroupsList myGroups={myGroups?.data.groups} chatId={chatId} />
       </Grid>
       <Grid
         item
@@ -256,7 +314,7 @@ const Groups = () => {
               overflow={"auto"}
             >
               {/* Members */}
-              {sampleUsers.map((i) => (
+              {members.map((i) => (
                 <UserItem
                   key={i._id}
                   user={i}
@@ -302,7 +360,11 @@ const Groups = () => {
         open={isMobileMenuOpen}
         onClose={handleMobileClose}
       >
-        <GroupsList w={"50vw"} myGroups={sampleChats} chatId={chatId} />
+        <GroupsList
+          w={"50vw"}
+          myGroups={myGroups?.data.groups}
+          chatId={chatId}
+        />
       </Drawer>
     </Grid>
   );
