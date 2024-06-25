@@ -19,20 +19,22 @@ import {
   Typography,
 } from "@mui/material";
 import React, { Suspense, lazy, memo, useEffect, useState } from "react";
-import { bgGradient, matBlack } from "../constants/color";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { Link } from "../components/styles/StyledComponents";
 import AvatarCard from "../components/shared/AvatarCard";
+import { Link } from "../components/styles/StyledComponents";
+import { bgGradient, matBlack } from "../constants/color";
 
-import { sampleChats, sampleUsers } from "../constants/sampleData";
+import { useDispatch, useSelector } from "react-redux";
+import { LayoutLoader } from "../components/layout/Loaders";
 import UserItem from "../components/shared/UserItem";
+import { useAsyncMutation, useErrors } from "../hooks/hook";
 import {
   useChatDetailsQuery,
   useMyGroupsQuery,
+  useRemoveGroupMemberMutation,
   useRenameGroupMutation,
 } from "../redux/api/api";
-import { useAsyncMutation, useErrors } from "../hooks/hook";
-import { LayoutLoader } from "../components/layout/Loaders";
+import { setIsAddMember } from "../redux/reducers/misc";
 
 const ConfirmDeleteDialog = lazy(() =>
   import("../components/dialogs/ConfirmDeleteDialog")
@@ -42,11 +44,14 @@ const AddMemberDialog = lazy(() =>
   import("../components/dialogs/AddMemberDialog")
 );
 
-const isAddMember = false;
+const isAddMember = true;
 
 const Groups = () => {
   const chatId = useSearchParams()[0].get("group");
   const navigate = useNavigate();
+  const dispatch = useDispatch();
+
+  // const { isAddMember } = useSelector((state) => state.misc);
 
   const myGroups = useMyGroupsQuery("");
 
@@ -57,6 +62,10 @@ const Groups = () => {
 
   const [updateGroup, isLoadingGroupName] = useAsyncMutation(
     useRenameGroupMutation
+  );
+
+  const [removeMember, isLoadingRemoveMember] = useAsyncMutation(
+    useRemoveGroupMemberMutation
   );
 
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -126,7 +135,7 @@ const Groups = () => {
   };
 
   const openAddMemberHandler = () => {
-    console.log("add member");
+    dispatch(setIsAddMember(true));
   };
 
   const deleteHandler = () => {
@@ -134,8 +143,8 @@ const Groups = () => {
     closeConfirmDeleteHandler();
   };
 
-  const removeMemberHandler = (id) => {
-    console.log("remove member", id);
+  const removeMemberHandler = (userId) => {
+    removeMember("Removing Member...", { chatId, userId });
   };
 
   useEffect(() => {
@@ -336,7 +345,7 @@ const Groups = () => {
 
       {isAddMember && (
         <Suspense fallback={<Backdrop open />}>
-          <AddMemberDialog />
+          <AddMemberDialog chatId={chatId} />
         </Suspense>
       )}
 
