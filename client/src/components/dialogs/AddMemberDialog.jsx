@@ -7,18 +7,16 @@ import {
   Typography,
 } from "@mui/material";
 import React, { useState } from "react";
-import { sampleUsers } from "../../constants/sampleData";
-import UserItem from "../shared/UserItem";
+import { useDispatch, useSelector } from "react-redux";
+import { useAsyncMutation, useErrors } from "../../hooks/hook";
 import {
   useAddGroupMembersMutation,
   useAvailableFriendsQuery,
 } from "../../redux/api/api";
-import { useAsyncMutation, useErrors } from "../../hooks/hook";
-import { useDispatch, useSelector } from "react-redux";
 import { setIsAddMember } from "../../redux/reducers/misc";
+import UserItem from "../shared/UserItem";
 
 const AddMemberDialog = ({ chatId }) => {
-  const [selectedMembers, setSelectedMembers] = useState([]);
   const dispatch = useDispatch();
 
   const { isAddMember } = useSelector((state) => state.misc);
@@ -28,6 +26,8 @@ const AddMemberDialog = ({ chatId }) => {
   const [addMembers, isLoadingAddMember] = useAsyncMutation(
     useAddGroupMembersMutation
   );
+
+  const [selectedMembers, setSelectedMembers] = useState([]);
 
   const selectMemberHandler = (id) => {
     setSelectedMembers((prev) =>

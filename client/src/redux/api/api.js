@@ -61,7 +61,7 @@ const api = createApi({
           credentials: "include",
         };
       },
-      providedTags: ["Chat"],
+      providesTags: ["Chat"],
     }),
 
     getMessages: builder.query({
