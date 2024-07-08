@@ -17,13 +17,14 @@ import {
   Typography,
 } from "@mui/material";
 import axios from "axios";
-import React, { Suspense, lazy, useState } from "react";
+import React, { Suspense, lazy } from "react";
 import toast from "react-hot-toast";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { orange } from "../../constants/color";
 import { server } from "../../constants/config";
 import { userNotExists } from "../../redux/reducers/auth";
+import { NavLink } from "react-router-dom";
 import {
   setIsMobile,
   setIsNewGroup,
@@ -84,14 +85,19 @@ const Header = () => {
           }}
         >
           <Toolbar>
-            <Typography
-              variant="h6"
-              sx={{
-                display: { xs: "none", sm: "block" },
-              }}
+            <NavLink
+              style={{ textDecoration: "none", color: "white" }}
+              to={"/"}
             >
-              Chatup
-            </Typography>
+              <Typography
+                variant="h6"
+                sx={{
+                  display: { xs: "none", sm: "block" },
+                }}
+              >
+                Chatup
+              </Typography>
+            </NavLink>
             <Box
               sx={{
                 display: { xs: "block", sm: "none" },

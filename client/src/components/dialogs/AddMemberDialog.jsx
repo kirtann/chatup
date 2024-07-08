@@ -38,7 +38,7 @@ const AddMemberDialog = ({ chatId }) => {
   };
 
   const addMemberSubmitHandler = () => {
-    addMembers("Addming Members...", { chatId, members: selectedMembers });
+    addMembers("Adding Members...", { chatId, members: selectedMembers });
     closeHandler();
   };
 
